@@ -2,7 +2,7 @@ package org.itmo.aggregator;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -24,7 +24,7 @@ public class Aggregator {
     private final String outputFile;
     private final int topN;
     private volatile ResultAggregator resultAggregator;
-    private final CountDownLatch completionLatch = new CountDownLatch(1);
+    private final CompletableFuture<Void> completionFuture = new CompletableFuture<>();
 
     public Aggregator(RabbitMQConfig config, String outputFile, int topN) {
         this.config = config;
@@ -73,7 +73,7 @@ public class Aggregator {
                     saveToFile(result);
                     printStatistics(result);
 
-                    completionLatch.countDown();
+                    completionFuture.complete(null);
                 }
 
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
@@ -85,8 +85,12 @@ public class Aggregator {
 
         channel.basicConsume(RabbitMQConfig.RESULTS_QUEUE, false, deliverCallback, tag -> {});
 
-        if (!completionLatch.await(TIMEOUT_MINUTES, TimeUnit.MINUTES)) {
+        try {
+            completionFuture.get(TIMEOUT_MINUTES, TimeUnit.MINUTES);
+        } catch (java.util.concurrent.TimeoutException e) {
             logger.error("Timeout after {} minutes!", TIMEOUT_MINUTES);
+        } catch (java.util.concurrent.ExecutionException e) {
+            logger.error("Error during aggregation", e.getCause());
         }
 
         channel.close();
