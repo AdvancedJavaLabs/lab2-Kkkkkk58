@@ -1,6 +1,8 @@
 package org.itmo.common.model;
 
 public class SentimentScore {
+    private static final Double SENTIMENT_THRESHOLD = 0.05;
+
     private int positiveCount;
     private int negativeCount;
     private double score;
@@ -11,9 +13,9 @@ public class SentimentScore {
         this.negativeCount = negativeCount;
         this.score = totalWords > 0 ? (double)(positiveCount - negativeCount) / totalWords : 0.0;
         
-        if (score > 0.05) {
+        if (score > SENTIMENT_THRESHOLD) {
             this.sentiment = "POSITIVE";
-        } else if (score < -0.05) {
+        } else if (score < -SENTIMENT_THRESHOLD) {
             this.sentiment = "NEGATIVE";
         } else {
             this.sentiment = "NEUTRAL";
