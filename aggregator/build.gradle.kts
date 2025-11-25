@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(project(":common"))
+    implementation("com.google.guava:guava:32.1.2-jre")
 }
 
 application {

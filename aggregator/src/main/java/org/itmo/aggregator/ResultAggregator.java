@@ -1,13 +1,15 @@
 package org.itmo.aggregator;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Iterators;
 import org.itmo.aggregator.model.AggregatedResult;
 import org.itmo.aggregator.model.WordFrequency;
 import org.itmo.common.model.ProcessingResult;
@@ -55,6 +57,7 @@ public class ResultAggregator {
         int totalNegative = 0;
         long totalProcessingTime = 0;
         Map<String, Integer> workerStats = new HashMap<>();
+        List<Iterator<SortedSentence>> sentenceIterators = new ArrayList<>(results.size());
         List<SortedSentence> allSentences = new ArrayList<>();
         StringBuilder completeText = new StringBuilder();
         
@@ -73,9 +76,9 @@ public class ResultAggregator {
             
             String workerId = result.getWorkerId();
             workerStats.put(workerId, workerStats.getOrDefault(workerId, 0) + 1);
-            
-            allSentences.addAll(result.getSortedSentences());
-            
+
+            sentenceIterators.add(result.getSortedSentences().iterator());
+
             completeText.append(result.getModifiedText()).append("\n\n");
         }
         
@@ -93,9 +96,14 @@ public class ResultAggregator {
         aggregated.setOverallSentiment(overallSentiment);
         
         aggregated.setCompleteModifiedText(completeText.toString().trim());
-        
-        Collections.sort(allSentences);
-        aggregated.setAllSortedSentences(allSentences);
+
+        Iterator<SortedSentence> sortedSentenceIterator = Iterators.mergeSorted(
+                sentenceIterators,
+                Comparator.naturalOrder()
+        );
+        List<SortedSentence> sortedSentences = new ArrayList<>();
+        sortedSentenceIterator.forEachRemaining(sortedSentences::add);
+        aggregated.setAllSortedSentences(sortedSentences);
         
         aggregated.setTotalProcessingTimeMs(totalProcessingTime);
         aggregated.setWorkersUsed(workerStats.size());

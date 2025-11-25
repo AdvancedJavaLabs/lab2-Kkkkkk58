@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Aggregator {
-    private static final Integer TIMEOUT_MINUTES = 10;
+    private static final Integer TIMEOUT_MINUTES = 60;
     private static final Logger logger = LoggerFactory.getLogger(Aggregator.class);
 
     private final RabbitMQConfig config;

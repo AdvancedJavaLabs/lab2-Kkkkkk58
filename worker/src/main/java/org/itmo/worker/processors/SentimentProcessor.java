@@ -20,6 +20,8 @@ public class SentimentProcessor implements TextProcessor {
         Properties props = new Properties();
         props.setProperty("annotators", "tokenize,ssplit,parse,sentiment");
         props.setProperty("tokenize.language", "en");
+        props.setProperty("parse.maxlen", "40");
+        props.setProperty("parse.model", "edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz");
         pipeline = new StanfordCoreNLP(props);
     }
     
